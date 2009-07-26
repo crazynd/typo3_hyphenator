@@ -24,6 +24,7 @@
  * Hyphenator
  *
  * @author Andreas Lappe <nd@off-pist.de>
+ * @version $Id: $
  */
 
 
