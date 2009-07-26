@@ -2,6 +2,14 @@ page {
 	includeJS {
 		file666 = EXT:hyphenator/res/Hyphenator.js
 	}
+
+	config.tx_hyphenator {
+		classname = bodytext
+		minwordlength = 6
+		displaytogglebox = 0
+		remoteloading = 1
+		enablecache = 1	
+	}
 }
 
-lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text
+# lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text
