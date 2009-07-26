@@ -1,0 +1,7 @@
+page {
+	includeJS {
+		file666 = EXT:hyphenator/res/Hyphenator.js
+	}
+}
+
+lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text
