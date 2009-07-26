@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2009     Andreas Lappe <nd@off-pist.de>,
+*  (c) 2009     Andreas Lappe <nd@off-pist.de>
 *
 *  All rights reserved
 *
@@ -24,17 +24,33 @@
  * Hyphenator
  *
  * @author Andreas Lappe <nd@off-pist.de>
- * @version $Id: $
+ * @version $Id$
+ *
  */
 
 
 class tx_hyphenator {
 
 	/**
+	 * @var array config
+	 */
+	protected $config = Array();
+
+	private $configstring = '';
+
+
+	/**
 	 * main processing method
 	 */
 	function contentPostProc_all(&$params, &$reference){
-			
+
+		// Set config global
+		$this->config = &$params['pObj']->config['config']['tx_hyphenator.'];
+		
+		// Build config string from it
+		if(count($this->config) > 0)
+			$this->configstring = $this->handleConfig();
+
 		// process the page with these options
 		$params['pObj']->content = $this->process($params['pObj']->content);
 
@@ -51,12 +67,51 @@ class tx_hyphenator {
 	}
 
 	/**
-	 * generates the google tracking code (js script at the end of the body tag).
+	 * Generate actualy JS block
 	 * 
 	 * @return	string	js tracking code
 	 */
 	function script_code() {
-		return '<script type="text/javascript">Hyphenator.config({ minwordlength : 4 }); Hyphenator.run();</script>'.chr(10);
+		return '<script type="text/javascript">'.$this->configstring.' Hyphenator.run();</script>'.chr(10);
+	}
+
+	/**
+	 * Get configuration and build the config string to be inserted
+	 *
+	 * @return string the config
+	 * @
+	 */
+	function handleConfig() {
+		$configArray;
+		if(isset($this->config['classname'])) 
+			$configArray[] = 'classname : \''.$this->config['classname'].'\'';
+		if(isset($this->config['donthyphenateclassname']))
+			$configArray[] = 'donthyphenateclassname : \''.$this->config['donthyphenateclassname'].'\'';
+		if(isset($this->config['displaytogglebox'])) {
+			if($this->config['displaytogglebox'])
+				$configArray[] = 'displaytogglebox : true';
+			else
+				$configArray[] = 'displaytogglebox : false';
+		}
+		if(isset($this->config['minwordlength']))
+				$configArray[] = 'minwordlength : '.$this->config['minwordlength'];
+
+		if(isset($this->config['remoteloading'])) {
+			if($this->config['remoteloading'])
+				$configArray[] = 'remoteloading : true';
+			else
+				$configArray[] = 'remoteloading : false';
+		}
+		
+		if(isset($this->config['enablecache'])) {
+			if($this->config['enablecache'])
+				$configArray[] = 'enablecache : true';
+			else
+				$configArray[] = 'enablecache : false';
+		}
+
+		// done
+		return 'Hyphenator.config({'.implode(', ', $configArray).'});';
 	}
 	
 }
