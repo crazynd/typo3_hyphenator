@@ -4,13 +4,21 @@ page {
 	}
 
 	config.tx_hyphenator {
-		#classname = bodytext
+		classname = bodytext
+
 		# donthyphenateclassname = whatever
 		# minwordlength = 6
 		# displaytogglebox = 0
 		# remoteloading = 1
 		# enablecache = 1	
+
+		# Do not use alert() to display errors:
+		onerrorhandler (
+			function(e) {
+				console.log('Hyphenator: error ocurred! '+e.message);	
+			}
+		)
 	}
 }
 
-lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text
+#lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text

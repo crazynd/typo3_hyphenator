@@ -109,6 +109,8 @@ class tx_hyphenator {
 			else
 				$configArray[] = 'enablecache : false';
 		}
+		if(isset($this->config['onerrorhandler']))
+			$configArray[] = 'onerrorhandler : '.$this->config['onerrorhandler'];
 
 		// done
 		return 'Hyphenator.config({'.implode(', ', $configArray).'});';
