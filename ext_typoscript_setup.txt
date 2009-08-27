@@ -11,7 +11,7 @@ page {
 		# displaytogglebox = 0
 		# remoteloading = 1
 		# enablecache = 1	
-		intermediatestate = visible
+		# intermediatestate = visible
 
 		# Do not use alert() to display errors:
 		onerrorhandler (
