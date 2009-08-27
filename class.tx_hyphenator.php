@@ -109,6 +109,11 @@ class tx_hyphenator {
 			else
 				$configArray[] = 'enablecache : false';
 		}
+
+		if(isset($this->config['intermediatestate'])) {
+			$configArray[] = 'intermediatestate : \''.$this->config['intermediatestate'].'\'';
+		}
+
 		if(isset($this->config['onerrorhandler']))
 			$configArray[] = 'onerrorhandler : '.$this->config['onerrorhandler'];
 
