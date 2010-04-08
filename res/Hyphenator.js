@@ -1,6 +1,6 @@
 ﻿/*!
- *  Hyphenator 2.3.2 - client side hyphenation for webbrowsers
- *  Copyright (C) 2009  Mathias Nater, Zürich (mathias at mnn dot ch)
+ *  Hyphenator 2.5.0 - client side hyphenation for webbrowsers
+ *  Copyright (C) 2010  Mathias Nater, Zürich (mathias at mnn dot ch)
  *  Project and Source hosted on http://code.google.com/p/hyphenator/
  * 
  *  This JavaScript code is free software: you can redistribute
@@ -24,13 +24,13 @@
  
 /* The following comment is for JSLint: */
 /*global window, ActiveXObject, unescape */
-/*jslint browser: true, eqeqeq: true, immed: true, newcap: true, nomen: true, onevar: true, undef: true, white: true, indent: 4*/
+/*jslint white: true, browser: true, onevar: true, undef: true, nomen: true, eqeqeq: true, newcap: true, immed: true */
 
 /**
  * @fileOverview
  * A script that does hyphenation in (X)HTML files
  * @author Mathias Nater, <a href = "mailto:mathias@mnn.ch">mathias@mnn.ch</a>
- * @version 2.3.2
+ * @version 2.5.0
   */
 
 /**
@@ -59,7 +59,7 @@ var Hyphenator = (function () {
 	 * @private
 	 * @see Hyphenator-autoSetMainLanguage
 	 */
-	var languageHint = 'cs, da, bn, de, en, es, fi, fr, gu, hi, hu, it, kn, ml, nl, or, pa, pl, pt, ru, sv, ta, te, uk',
+	var languageHint = 'cs, da, bn, de, en, es, fi, fr, gu, hi, hu, hy, it, kn, lt, ml, nl, or, pa, pl, pt, ru, sv, ta, te, tr, uk',
 
 	/**
 	 * @name Hyphenator-supportedLang
@@ -100,12 +100,15 @@ var Hyphenator = (function () {
 		'fi': 'Sivun kielt%E4 ei tunnistettu automaattisesti. M%E4%E4rit%E4 sivun p%E4%E4kieli:',
 		'fr': 'La langue de ce site n%u2019a pas pu %EAtre d%E9termin%E9e automatiquement. Veuillez indiquer une langue, s.v.p.%A0:',
 		'hu': 'A weboldal nyelvét nem sikerült automatikusan megállapítani. Kérem adja meg a nyelvet:',
+		'hy': 'Չհաջողվեց հայտնաբերել այս կայքի լեզուն։ Խնդրում ենք նշեք հիմնական լեզուն՝',
 		'it': 'Lingua del sito sconosciuta. Indicare una lingua, per favore:',
+		'lt': 'Nepavyko automatiškai nustatyti šios svetainės kalbos. Prašome įvesti kalbą:',
 		'ml': 'ഈ വെ%u0D2C%u0D4D%u200Cസൈറ്റിന്റെ ഭാഷ കണ്ടുപിടിയ്ക്കാ%u0D28%u0D4D%u200D കഴിഞ്ഞില്ല. ഭാഷ ഏതാണെന്നു തിരഞ്ഞെടുക്കുക:',
 		'nl': 'De taal van deze website kan niet automatisch worden bepaald. Geef de hoofdtaal op:',
 		'pt': 'A língua deste site não pôde ser determinada automaticamente. Por favor indique a língua principal:',
 		'ru': 'Язык этого сайта не может быть определен автоматически. Пожалуйста укажите язык:',
 		'sv': 'Spr%E5ket p%E5 den h%E4r webbplatsen kunde inte avg%F6ras automatiskt. V%E4nligen ange:',
+		'tr': 'Bu web sitesinin dilini otomatik olarak tespit edilememiştir. Lütfen ana dili gösterir:',
 		'uk': 'Мова цього веб-сайту не може бути визначена автоматично. Будь ласка, вкажіть головну мову:'
 	},
 	
@@ -113,7 +116,7 @@ var Hyphenator = (function () {
 	 * @name Hyphenator-basePath
 	 * @fieldOf Hyphenator
 	 * @description
- 	 * A string storing the basepath from where Hyphenator.js was loaded.
+	 * A string storing the basepath from where Hyphenator.js was loaded.
 	 * This is used to load the patternfiles.
 	 * The basepath is determined dynamically by searching all script-tags for Hyphenator.js
 	 * If the path cannot be determined http://hyphenator.googlecode.com/svn/trunk/ is used as fallback.
@@ -148,7 +151,6 @@ var Hyphenator = (function () {
 		if (window.location.href.indexOf(basePath) !== -1) {
 			re = true;
 		}
-//		alert(re+"\r\r"+basePath+"\r\r"+window.location);
 		return re;
 	}()),
 	
@@ -183,6 +185,20 @@ var Hyphenator = (function () {
 	 * @see hyphenateWord
 	 */
 	enableCache = true,
+
+	/**
+	 * @name Hyphenator-enableReducedPatternSet
+	 * @fieldOf Hyphenator
+	 * @description
+	 * A variable to set if storing the used patterns is set
+	 * @type boolean
+	 * @default false
+	 * @private
+	 * @see Hyphenator.config
+	 * @see hyphenateWord
+	 * @see Hyphenator.getRedPatternSet
+	 */	
+	enableReducedPatternSet = false,
 	
 	/**
 	 * @name Hyphenator-enableRemoteLoading
@@ -343,8 +359,8 @@ var Hyphenator = (function () {
 	 * @type string
 	 * @private
 	 */	
-	url = '(\\w*:\/\/)?((\\w*:)?(\\w*)@)?((([\\d]{1,3}\\.){3}([\\d]{1,3}))|(([\\w]*\\.)+([\\w]{2,4})))(:\\d*)?(\/[\\w#!:\\.?\\+=&%@!\\-]*)*',
-
+	url = '(\\w*:\/\/)?((\\w*:)?(\\w*)@)?((([\\d]{1,3}\\.){3}([\\d]{1,3}))|((www\\.|[a-zA-Z]\\.)?[a-zA-Z0-9\\-\\.]+\\.([a-z]{2,4})))(:\\d*)?(\/[\\w#!:\\.?\\+=&%@!\\-]*)*',
+	//      protocoll     usr     pwd                    ip               or                          host                 tld        port               path
 	/**
 	 * @name Hyphenator-mail
 	 * @fieldOf Hyphenator
@@ -371,21 +387,38 @@ var Hyphenator = (function () {
 	 * @description
 	 * A string that holds a char.
 	 * Depending on the browser, this is the zero with space or an empty string.
-	 * The zeroWidthSpace is inserted after a '-' in compound words, so even FF and IE
-	 * will break after a '-' if necessary.
-	 * zeroWidthSpace is also used to break URLs
+	 * zeroWidthSpace is used to break URLs
 	 * @type string
 	 * @private
 	 */		
 	zeroWidthSpace = (function () {
 		var zws, ua = navigator.userAgent.toLowerCase();
-		if (ua.indexOf('msie 6') === -1) {
-			zws = String.fromCharCode(8203); //Unicode zero width space
-		} else {
+		zws = String.fromCharCode(8203); //Unicode zero width space
+		if (ua.indexOf('msie 6') !== -1) {
 			zws = ''; //IE6 doesn't support zws
 		}
+		if (ua.indexOf('opera') !== -1 && ua.indexOf('version/10.00') !== -1) {
+			zws = ''; //opera 10 on XP doesn't support zws
+		}
 		return zws;
+		//return '[zws]';
 	}()),
+	
+	/**
+	 * @name Hyphenator-createElem
+	 * @fieldOf Hyphenator
+	 * @description
+	 * A function alias to document.createElementNS or document.createElement
+	 * @type function
+	 * @private
+	 */		
+	createElem = function (tagname) {
+		if (document.createElementNS) {
+			return document.createElementNS('http://www.w3.org/1999/xhtml', tagname);
+		} else if (document.createElement) {
+			return document.createElement(tagname);
+		}
+	},
 	
 	/**
 	 * @name Hyphenator-onHyphenationDone
@@ -409,7 +442,7 @@ var Hyphenator = (function () {
 	 * @private
 	 */		
 	onError = function (e) {
-		alert("Hyphenator.js says:\n\nAn Error ocurred:\n" + e.message);
+		window.alert("Hyphenator.js says:\n\nAn Error ocurred:\n" + e.message);
 	},
 
 	/**
@@ -522,124 +555,105 @@ var Hyphenator = (function () {
 	}()),
 		
 	/*
-	 * ContentLoaded.js
+	 * runOnContentLoaded is based od jQuery.bindReady()
+	 * see
+	 * jQuery JavaScript Library v1.3.2
+	 * http://jquery.com/
 	 *
-	 * Author: Diego Perini (diego.perini at gmail.com)
-	 * Summary: Cross-browser wrapper for DOMContentLoaded
-	 * Updated: 17/05/2008
-	 * License: MIT
-	 * Version: 1.1
+	 * Copyright (c) 2009 John Resig
+	 * Dual licensed under the MIT and GPL licenses.
+	 * http://docs.jquery.com/License
 	 *
-	 * URL:
-	 * http://javascript.nwbox.com/ContentLoaded/
-	 * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
-	 *
-	 * Notes:
-	 * based on code by Dean Edwards and John Resig
-	 * http://dean.edwards.name/weblog/2006/06/again/
+	 * Date: 2009-02-19 17:34:21 -0500 (Thu, 19 Feb 2009)
+	 * Revision: 6246
 	 */
-	// @w	window reference
-	// @f	function reference
-	//function ContentLoaded(w, f) {
 	/**
 	 * @name Hyphenator-runOnContentLoaded
 	 * @methodOf Hyphenator
 	 * @description
-	 * A crossbrowser solution for the DOMContentLoaded-Event
-	 * @author Diego Perini (diego.perini at gmail.com)
-	 * <a href = "http://javascript.nwbox.com/ContentLoaded/">http://javascript.nwbox.com/ContentLoaded/</a>
+	 * A crossbrowser solution for the DOMContentLoaded-Event based on jQuery
+	 * <a href = "http://jquery.com/</a>
 	 * @param object the window-object
 	 * @param function-object the function to call onDOMContentLoaded
 	 * @private
- 	 */		
+	 */
 	runOnContentLoaded = function (w, f) {
-		var	d = w.document,
-			D = 'DOMContentLoaded',
-			// user agent, version
-			u = w.navigator.userAgent.toLowerCase(),
-			v = parseFloat(u.match(/.+(?:rv|it|ml|ra|ie)[\/: ]([\d.]+)/)[1]),
-			oldonload = w.onload;
-				
-		function init(e) {
+		var DOMContentLoaded, toplevel;
+		if (documentLoaded) {
+			f();
+			return;
+		}
+		function init() {
 			if (!documentLoaded) {
 				documentLoaded = true;
-				// pass a fake event if needed
-				f((e.type && e.type === D) ? e : {
-					type: D,
-					target: d,
-					eventPhase: 0,
-					currentTarget: d,
-					timeStamp: new Date().getTime(),
-					eventType: e.type || e
-				});
+				f();
 			}
 		}
-	
-		// safari < 525.13
-		if (/webkit\//.test(u) && v < 525.13) {
-	
-			(function () {
-				if (/complete|loaded/.test(d.readyState)) {
-					init('khtml-poll');
-				} else {
-					setTimeout(arguments.callee, 10);
-				}
-			}());
-	
-		// internet explorer all versions
-		} else if (/msie/.test(u) && !w.opera) {
-	
-			d.attachEvent('onreadystatechange',
-				function (e) {
-					if (d.readyState === 'complete') {
-						d.detachEvent('on' + e.type, arguments.callee);
-						init(e);
-					}
-				}
-			);
-			if (w.self === top) {
-				(function () {
-					try {
-						d.documentElement.doScroll('left');
-					} catch (e) {
-						setTimeout(arguments.callee, 10);
-						return;
-					}
-					init('msie-poll');
-				}());
+		
+		function doScrollCheck() {
+			try {
+				// If IE is used, use the trick by Diego Perini
+				// http://javascript.nwbox.com/IEContentLoaded/
+				document.documentElement.doScroll("left");
+			} catch (error) {
+				setTimeout(doScrollCheck, 1);
+				return;
 			}
-	
-		// browsers having native DOMContentLoaded
-		} else if (d.addEventListener &&
-			(/opera\//.test(u) && v > 9) ||
-			(/gecko\//.test(u) && v >= 1.8) ||
-			(/khtml\//.test(u) && v >= 4.0) ||
-			(/webkit\//.test(u) && v >= 525.13)) {
-	
-			d.addEventListener(D,
-				function (e) {
-					d.removeEventListener(D, arguments.callee, false);
-					init(e);
-				}, false
-			);
-	
-		// fallback to last resort for older browsers
-		} else {
-	
-			// from Simon Willison
-			/**
-			 * @ignore
-			 */
-			w.onload = function (e) {
-				init(e || w.event);
-				if (typeof oldonload === 'function') {
-					oldonload(e || w.event);
+		
+			// and execute any waiting functions
+			init();
+		}
+
+		
+		// Cleanup functions for the document ready method
+		if (document.addEventListener) {
+			DOMContentLoaded = function () {
+				document.removeEventListener("DOMContentLoaded", DOMContentLoaded, false);
+				init();
+			};
+		
+		} else if (document.attachEvent) {
+			DOMContentLoaded = function () {
+				// Make sure body exists, at least, in case IE gets a little overzealous (ticket #5443).
+				if (document.readyState === "complete") {
+					document.detachEvent("onreadystatechange", DOMContentLoaded);
+					init();
 				}
 			};
-	
 		}
+
+		// Mozilla, Opera and webkit nightlies currently support this event
+		if (document.addEventListener) {
+			// Use the handy event callback
+			document.addEventListener("DOMContentLoaded", DOMContentLoaded, false);
+			
+			// A fallback to window.onload, that will always work
+			window.addEventListener("load", init, false);
+
+		// If IE event model is used
+		} else if (document.attachEvent) {
+			// ensure firing before onload,
+			// maybe late but safe also for iframes
+			document.attachEvent("onreadystatechange", DOMContentLoaded);
+			
+			// A fallback to window.onload, that will always work
+			window.attachEvent("onload", init);
+
+			// If IE and not a frame
+			// continually check to see if the document is ready
+			toplevel = false;
+			try {
+				toplevel = window.frameElement === null;
+			} catch (e) {}
+
+			if (document.documentElement.doScroll && toplevel) {
+				doScrollCheck();
+			}
+		}
+
 	},
-	/* end ContentLoaded.js */
+
+
 
 	/**
 	 * @name Hyphenator-getLang
@@ -744,7 +758,7 @@ var Hyphenator = (function () {
 	 */		
 	gatherDocumentInfos = function () {
 		var elToProcess, tmp, i = 0,
-			process = function (el, hide, lang) {
+		process = function (el, hide, lang) {
 			var n, i = 0, hyphenatorSettings = {};
 			if (hide && intermediateState === 'hidden') {
 				if (!!el.getAttribute('style')) {
@@ -755,7 +769,7 @@ var Hyphenator = (function () {
 				hyphenatorSettings.isHidden = true;
 				el.style.visibility = 'hidden';
 			}
-			if (el.lang) {
+			if (el.lang && typeof(el.lang) === 'string') {
 				hyphenatorSettings.language = el.lang.toLowerCase(); //copy attribute-lang to internal lang
 			} else if (lang) {
 				hyphenatorSettings.language = lang.toLowerCase();
@@ -766,7 +780,9 @@ var Hyphenator = (function () {
 			if (supportedLang[lang]) {
 				docLanguages[lang] = true;
 			} else {
-				onError(new Error('Language ' + lang + ' is not yet supported.'));
+				if (!Hyphenator.isBookmarklet()) {
+					onError(new Error('Language ' + lang + ' is not yet supported.'));
+				}
 			}
 			Expando.setDataForElem(el, hyphenatorSettings);
 			elements.push(el);
@@ -795,47 +811,7 @@ var Hyphenator = (function () {
 		if (elements.length > 0) {
 			Expando.appendDataForElem(elements[elements.length - 1], {isLast : true});
 		}
-	},
-	
-	/*
-	registerOnCopy = function () {
-			document.getElementsByTagName('body')[0].oncopy = function (e) {
-				var text, h;
-				if (window.getSelection) {
-					text = window.getSelection().toString();
-				}
-				else if (document.selection) { // should come last; Opera!
-					text = document.selection.createRange().text;
-				}
-				switch (hyphen) {
-					case '|':
-						h = '\\|';
-						break;
-					case '+':
-						h = '\\+';
-						break;
-					case '*':
-						h = '\\*';
-						break;
-					case String.fromCharCode(173):
-						h = '\u00AD';
-						break;
-					default:
-						h = hyphen;
-					}
-				text = text.replace(new RegExp(h, 'g'), '');
-				text = text.replace(new RegExp(zeroWidthSpace, 'g'), '');
-				alert(text);
-				if (!!e && !!e.clipboardData) { //Safari
-					e.preventDefault();
-					e.clipboardData.setData('text/plain', text);
-				} else if (!!window.clipboardData) { // IE
-					window.preventDefault();
-					window.clipboardData.setData('Text', text);
-				}
-			}			
-	},
-	*/
+	},	
 	 
 	/**
 	 * @name Hyphenator-convertPatterns
@@ -929,9 +905,9 @@ var Hyphenator = (function () {
 				}
 			}
 		}
-		if (document.createElement) {
+		if (createElem) {
 			head = document.getElementsByTagName('head').item(0);
-			script = document.createElement('script');
+			script = createElem('script');
 			script.src = url;
 			script.type = 'text/javascript';
 			head.appendChild(script);
@@ -951,6 +927,9 @@ var Hyphenator = (function () {
 		if (!lo.prepared) {	
 			if (enableCache) {
 				lo.cache = {};
+			}
+			if (enableReducedPatternSet) {
+				lo.redPatSet = {};
 			}
 			if (lo.hasOwnProperty('exceptions')) {
 				Hyphenator.addExceptions(lang, lo.exceptions);
@@ -1026,7 +1005,7 @@ var Hyphenator = (function () {
 						finishedLoading = true;
 						delete docLanguages[lang];
 						//do conversion while other patterns are loading:
-						prepareLanguagesObj(lang);		
+						prepareLanguagesObj(lang);
 					}
 				}
 			}
@@ -1057,7 +1036,7 @@ var Hyphenator = (function () {
 			}
 		} else {
 			bdy = document.getElementsByTagName('body')[0];
-			myBox = document.createElement('div');
+			myBox = createElem('div');
 			myIdAttribute = document.createAttribute('id');
 			myIdAttribute.nodeValue = 'HyphenatorToggleBox';
 			myClassAttribute = document.createAttribute('class');
@@ -1114,12 +1093,12 @@ var Hyphenator = (function () {
 			return lo.exceptions[word].replace(/-/g, hyphen);
 		}
 		if (word.indexOf('-') !== -1) {
-			//word contains '-' -> put a zeroWidthSpace after it and hyphenate the parts separated with '-'
+			//word contains '-' -> hyphenate the parts separated with '-'
 			parts = word.split('-');
 			for (i = 0, l = parts.length; i < l; i++) {
 				parts[i] = hyphenateWord(lang, parts[i]);
 			}
-			return parts.join('-' + zeroWidthSpace);
+			return parts.join('-');
 		}
 		//finally the core hyphenation algorithm
 		w = '_' + word + '_';
@@ -1136,6 +1115,9 @@ var Hyphenator = (function () {
 					pat = lo.patterns[patk];
 				} else {
 					continue;
+				}
+				if (enableReducedPatternSet) {
+					lo.redPatSet[patk] = pat;
 				}
 				digits = 1;
 				patl = pat.length;
@@ -1317,7 +1299,7 @@ var Hyphenator = (function () {
 		 * minor release: new languages, improvements
 		 * @public
          */		
-		version: '2.3.2',
+		version: '2.5.0',
 		
 		/**
 		 * @name Hyphenator.languages
@@ -1433,6 +1415,11 @@ var Hyphenator = (function () {
 							enableCache = obj.enablecache;
 						}
 						break;
+					case 'enablereducedpatternset':
+						if (assert('enablereducedpatternset', 'boolean')) {
+							enableReducedPatternSet = obj.enablereducedpatternset;
+						}
+						break;
 					case 'onhyphenationdonecallback':
 						if (assert('onhyphenationdonecallback', 'function')) {
 							onHyphenationDone = obj.onhyphenationdonecallback;
@@ -1480,7 +1467,6 @@ var Hyphenator = (function () {
 					if (displayToggleBox) {
 						toggleBox(true);
 					}
-					//registerOnCopy();
 				} catch (e) {
 					onError(e);
 				}
@@ -1557,6 +1543,9 @@ var Hyphenator = (function () {
 						if (n.nodeType === 3 && n.data.length >= min) { //type 3 = #text -> hyphenate!
 							n.data = n.data.replace(Hyphenator.languages[lang].genRegExp, hyphenate);
 						} else if (n.nodeType === 1) {
+							if (n.lang !== '') {
+								lang = n.lang;
+							}
 							Hyphenator.hyphenate(n, lang);
 						}
 					}
@@ -1564,6 +1553,19 @@ var Hyphenator = (function () {
 			} else {
 				onError(new Error('Language "' + lang + '" is not loaded.'));
 			}
+		},
+		
+		/**
+		 * @name Hyphenator.getRedPatternSet
+		 * @methodOf Hyphenator
+		 * @description
+		 * Returns {@link Hyphenator-isBookmarklet}.
+		 * @param string the language patterns are stored for
+		 * @returns object {'patk': pat}
+		 * @public
+         */
+		getRedPatternSet: function (lang) {
+			return Hyphenator.languages[lang].redPatSet;
 		},
 		
 		/**
