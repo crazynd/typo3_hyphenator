@@ -12,7 +12,7 @@
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'hyphenator',
-	'description' => 'Uses hyphenator JavaScript to properly justified paragraphs (Hyphenator 2.3.0)',
+	'description' => 'Uses hyphenator JavaScript to properly justified paragraphs.',
 	'category' => 'fe',
 	'shy' => 0,
 	'version' => '0.1.0',

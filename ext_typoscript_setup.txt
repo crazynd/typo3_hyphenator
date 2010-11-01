@@ -1,6 +1,6 @@
 page {
 	includeJS {
-		file666 = EXT:hyphenator/res/Hyphenator.js
+		file666 = EXT:hyphenator/Resources/JavaScript/Hyphenator.js
 	}
 
 	config.tx_hyphenator {
@@ -15,9 +15,7 @@ page {
 
 		# Do not use alert() to display errors:
 		onerrorhandler (
-			function(e) {
-				console.log('Hyphenator: error ocurred! '+e.message);	
-			}
+			function(e){console.log('Hyphenator: error ocurred! '+e.message);}
 		)
 	}
 }
