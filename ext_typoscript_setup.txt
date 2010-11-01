@@ -15,7 +15,7 @@ page {
 
 		# Do not use alert() to display errors:
 		onerrorhandler (
-			function(e){console.log('Hyphenator: error ocurred! '+e.message);}
+function(e){console.log('Hyphenator: error ocurred! '+e.message);}
 		)
 	}
 }
