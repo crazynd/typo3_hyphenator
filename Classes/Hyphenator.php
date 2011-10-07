@@ -3,7 +3,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2009     Andreas Lappe <nd@off-pist.de>
+ *  (c) 2011 Andreas Lappe <nd@off-pist.de>
  *
  *  All rights reserved
  *
@@ -42,7 +42,6 @@ class tx_hyphenator {
 	 */
 	private $configstring = '';
 
-
 	/**
 	 * main processing method
 	 *
@@ -50,16 +49,15 @@ class tx_hyphenator {
 	 * @param $reference
 	 */
 	public function contentPostProc_all(&$params, &$reference){
-
-		// Set config global
+			// Set config global
 		$this->config = &$params['pObj']->config['config']['tx_hyphenator.'];
 
-		// Build config string from it
-		if(count($this->config) > 0) {
-			$this->configstring = $this->handleConfig();
+			// Build config string from it
+		if (count($this->config) > 0) {
+			$this->configstring = $this->handleConfiguration($this->config);
 		}
 
-		// process the page with these options
+			// process the page with these options
 		$params['pObj']->content = $this->process($params['pObj']->content);
 	}
 
@@ -70,70 +68,144 @@ class tx_hyphenator {
 	 * @return string
 	 */
 	public function process($content){
-		// Add the tracking code to the end of <head> element
-		$content = str_replace('</body>', $this->generateScriptCode( $pageName ).'</body>', $content);
-		return $content;
-	}
-
-	/**
-	 * Generate JS block
-	 * 
-	 * @param void
-	 * @return string
-	 */
-	public function generateScriptCode() {
-		return '<script type="text/javascript">'.$this->configstring.' Hyphenator.run();</script>'.chr(10);
+		return str_replace('</body>', $this->configstring . '</body>', $content);
 	}
 
 	/**
 	 * Get configuration and build the config string to be inserted
 	 *
-	 * @param void
+	 * @param array $configuration
 	 * @return string
 	 */
-	public function handleConfig() {
-		$configArray;
+	public function handleConfiguration(array $configuration) {
+		$script = '';
 
-		if(isset($this->config['classname'])) {
-			$configArray[] = 'classname: \''.$this->config['classname'].'\'';
-		}
+		$functionOverrides = $this->handleFunctionOverrides($configuration);
+		$basicConfiguration = $this->handleBasicConfiguration($configuration);
 
-		if(isset($this->config['donthyphenateclassname'])) {
-			$configArray[] = 'donthyphenateclassname: \''.$this->config['donthyphenateclassname'].'\'';
-		}
+		$script .= $this->wrapJavaScriptInTags($functionOverrides);
+		$script .= $this->wrapJavaScriptInTags('Hyphenator.config(' . $basicConfiguration . '); Hyphenator.run()') . chr(10);
 
-		if(isset($this->config['displaytogglebox'])) {
-			$configArray[] = ($this->config['displaytogglebox']) ? 'displaytogglebox: true' : 'displaytogglebox: false';
-		}
-
-		if(isset($this->config['minwordlength'])) {
-			$configArray[] = 'minwordlength: '.$this->config['minwordlength'];
-		}
-
-		if(isset($this->config['remoteloading'])) {
-			$configArray[] = ($this->config['remoteloading']) ? 'remoteloading: true' : 'remoteloading: false';
-		}
-
-		if(isset($this->config['enablecache'])) {
-			$configArray[] = ($this->config['enablecache']) ? 'enablecache: true' : 'enablecache: false';
-		}
-
-		if(isset($this->config['intermediatestate'])) {
-			$configArray[] = 'intermediatestate: \''.$this->config['intermediatestate'].'\'';
-		}
-
-		if(isset($this->config['onerrorhandler'])) {
-			$configArray[] = 'onerrorhandler: '.$this->config['onerrorhandler'];
-		}
-
-		// done
-		return 'Hyphenator.config({'.implode(', ', $configArray).'});';
+		return $script;
 	}
 
+	/**
+	 * Create an array of normal values (strings/booleans/numbers) and return it
+	 * as a json string…
+	 *
+	 * @param array $configuration
+	 * @return string
+	 */
+	public function handleBasicConfiguration(array $configuration) {
+		$functionPrefix = 'txHyphenator.';
+		$configArray = array();
+
+		if (isset($this->config['classname'])) {
+			$configArray[] = '"classname":"' . $this->config['classname'] . '"';
+		}
+
+		if (isset($this->config['donthyphenateclassname'])) {
+			$configArray[] = '"donthyphenateclassname":"' . $this->config['donthyphenateclassname'] . '"';
+		}
+
+		if (isset($this->config['minwordlength'])) {
+			$configArray[] = '"minwordlength":"' . (int) $this->config['minwordlength'];
+		}
+
+		if (isset($this->config['displaytogglebox'])) {
+			$configArray[] = '"displaytogglebox":' . ($this->config['displaytogglebox']) ? 'true' : 'false';
+		}
+
+		if (isset($this->config['remoteloading'])) {
+			$configArray[] = '"remoteloading":' . ($this->config['remoteloading']) ? 'true' : 'false';
+		}
+
+		if (isset($this->config['enablecache'])) {
+			$configArray[] = '"enablecache":' . ($this->config['enablecache']) ? 'true' : 'false';
+		}
+
+		if (isset($this->config['intermediatestate'])) {
+			$configArray[] = '"intermediatestate":"' . $this->config['intermediatestate'] . '"';
+		}
+
+		if (isset($this->config['safecopy'])) {
+			$configArray[] = '"safecopy":"' . ($this->config['safecopy']) ? 'true' : 'false';
+		}
+
+		if (isset($this->config['doframes'])) {
+			$configArray[] = '"doframes":"' . ($this->config['doframes']) ? 'true' : 'false';
+		}
+
+		if (isset($this->config['storagetype'])) {
+			$configArray[] = '"storagetype":"' . $this->config['storagetype'] . '"';
+		}
+
+		// Functions:
+		if (isset($this->config['selectorfunction'])) {
+			$configArray[] = '"selectorfunction":' . $functionPrefix . 'selectorfunction';
+		}
+
+		if (isset($this->config['onerrorhandler'])) {
+			$configArray[] = '"onerrorhandler":' . $functionPrefix . 'onerrorhandler';
+		}
+
+		if (isset($this->config['togglebox'])) {
+			$configArray[] = '"togglebox":' . $functionPrefix . 'togglebox';
+		}
+
+		if (isset($this->config['onhyphenationdonecallback'])) {
+			$configArray[] = '"onhyphenationdonecallback":' . $functionPrefix . 'onhyphenationdonecallback';
+		}
+
+		return '{' . implode(',', $configArray) . '}';
+	}
+
+	/**
+	 * Handle function overrides…
+	 *
+	 * @param array $configuration
+	 * @return string
+	 */
+	public function handleFunctionOverrides(array $configuration) {
+		$functions = array();
+		$script = '';
+		if (isset($configuration['selectorfunction'])) {
+			$functions[] = '"selectorfunction":' . $configuration['selectorfunction'];
+		}
+
+		if (isset($configuration['onerrorhandler'])) {
+			$functions[] = '"onerrorhandler":' . $configuration['onerrorhandler'];
+		}
+
+		if (isset($configuration['togglebox'])) {
+			$functions[] = '"togglebox":' . $configuration['togglebox'];
+		}
+
+		if (isset($configuration['onhyphenationdonecallback'])) {
+			$functions[] = '"onhyphenationdonecallback":' . $configuration['onhyphenationdonecallback'];
+		}
+
+		$script .= 'var txHyphenator = { ' . chr(10) . implode(','.chr(10), $functions) . chr(10) . '};';
+
+		if ($configuration['compressInlineJavaScript']) {
+			$script = JSMin::minify($script);
+		}
+
+		return $script;
+	}
+
+	/**
+	 * Wrap the string in JavaScript-tags
+	 *
+	 * @param string $javaScriptCode
+	 * @return string
+	 */
+	public function wrapJavaScriptInTags($javaScriptCode) {
+		return '<script type="text/javascript">' . $javaScriptCode . '</script>';
+	}
 }
 
-if (defined("TYPO3_MODE") && $TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/hyphenator/class.tx_hyphenator.php"])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/hyphenator/class.tx_hyphenator.php"]);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/hyphenator/Classes/Hyphenator.php'])	{
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/hyphenator/Classes/Hyphenator.php']);
 }
-
 ?>

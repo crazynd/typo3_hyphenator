@@ -1,21 +1,62 @@
 page {
 	includeJS {
-		file666 = EXT:hyphenator/Resources/JavaScript/Hyphenator.js
+		hyphenator = EXT:hyphenator/Resources/Public/JavaScript/Hyphenator.js
 	}
 
 	config.tx_hyphenator {
-		classname = bodytext
+		compressInlineJavaScript = 1
 
+		# classname = bodytext
 		# donthyphenateclassname = whatever
 		# minwordlength = 6
 		# displaytogglebox = 0
 		# remoteloading = 1
 		# enablecache = 1	
+		# enablereducedpatternset = 0
 		# intermediatestate = visible
+		# safecopy = 1
+		# doframes = 1
+		# storagetype = none
+
+		# Functions override:
+		# -------------------
 
 		# Do not use alert() to display errors:
 		onerrorhandler (
-function(e){console.log('Hyphenator: error ocurred! '+e.message);}
+function(e){ }
+		)
+
+		# Do not use a class, but override the selector method to use
+		# every paragraph inside the body.
+		selectorfunction (
+function() {
+	var elements = [],
+		results = [];
+	elements = window.document.getElementsByTagName('p');
+	return elements;
+}
+		)
+# function() {
+# 	var elements = [],
+# 		results = [];
+# 	elements = window.document.getElementsByTagName('p');
+# 	for (var i = 0; i < elements.length; i++) {
+# 		if (elements[i].className.indexOf(dontHyphenateClass) === -1) {
+# 			results.push(elements[i]);
+# 		}
+# 	}
+#   return results;
+# }
+
+
+		# Override togglebox code:
+		# togglebox (
+		# function() { }
+		# )
+
+		# Override onhyphenationdone callback:
+		onhyphenationdonecallback (
+function () { console.log('WURM'); }
 		)
 	}
 }
