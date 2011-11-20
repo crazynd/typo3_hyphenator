@@ -28,7 +28,6 @@
  * @author Andreas Lappe <nd@off-pist.de>
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
- *
  */
 class tx_hyphenator {
 
@@ -80,11 +79,9 @@ class tx_hyphenator {
 	public function handleConfiguration(array $configuration) {
 		$script = '';
 
-		$functionOverrides = $this->handleFunctionOverrides($configuration);
 		$basicConfiguration = $this->handleBasicConfiguration($configuration);
 
-		$script .= $this->wrapJavaScriptInTags($functionOverrides);
-		$script .= $this->wrapJavaScriptInTags('Hyphenator.config(' . $basicConfiguration . '); Hyphenator.run()') . chr(10);
+		$script .= $this->wrapJavaScriptInTags($basicConfiguration . chr(10) . 'Hyphenator.config(txHyphenator); Hyphenator.run()');
 
 		return $script;
 	}
@@ -97,95 +94,67 @@ class tx_hyphenator {
 	 * @return string
 	 */
 	public function handleBasicConfiguration(array $configuration) {
-		$functionPrefix = 'txHyphenator.';
+		$script = '';
 		$configArray = array();
 
-		if (isset($this->config['classname'])) {
-			$configArray[] = '"classname":"' . $this->config['classname'] . '"';
+		if (isset($configuration['classname'])) {
+			$configArray[] = '"classname":"' . $configuration['classname'] . '"';
 		}
 
-		if (isset($this->config['donthyphenateclassname'])) {
-			$configArray[] = '"donthyphenateclassname":"' . $this->config['donthyphenateclassname'] . '"';
+		if (isset($configuration['donthyphenateclassname'])) {
+			$configArray[] = '"donthyphenateclassname":"' . $configuration['donthyphenateclassname'] . '"';
 		}
 
-		if (isset($this->config['minwordlength'])) {
-			$configArray[] = '"minwordlength":"' . (int) $this->config['minwordlength'];
+		if (isset($configuration['minwordlength'])) {
+			$configArray[] = '"minwordlength":"' . (int) $configuration['minwordlength'];
 		}
 
-		if (isset($this->config['displaytogglebox'])) {
-			$configArray[] = '"displaytogglebox":' . ($this->config['displaytogglebox']) ? 'true' : 'false';
+		if (isset($configuration['displaytogglebox'])) {
+			$configArray[] = '"displaytogglebox":' . ($configuration['displaytogglebox']) ? 'true' : 'false';
 		}
 
-		if (isset($this->config['remoteloading'])) {
-			$configArray[] = '"remoteloading":' . ($this->config['remoteloading']) ? 'true' : 'false';
+		if (isset($configuration['remoteloading'])) {
+			$configArray[] = '"remoteloading":' . ($configuration['remoteloading']) ? 'true' : 'false';
 		}
 
-		if (isset($this->config['enablecache'])) {
-			$configArray[] = '"enablecache":' . ($this->config['enablecache']) ? 'true' : 'false';
+		if (isset($configuration['enablecache'])) {
+			$configArray[] = '"enablecache":' . ($configuration['enablecache']) ? 'true' : 'false';
 		}
 
-		if (isset($this->config['intermediatestate'])) {
-			$configArray[] = '"intermediatestate":"' . $this->config['intermediatestate'] . '"';
+		if (isset($configuration['intermediatestate'])) {
+			$configArray[] = '"intermediatestate":"' . $configuration['intermediatestate'] . '"';
 		}
 
-		if (isset($this->config['safecopy'])) {
-			$configArray[] = '"safecopy":"' . ($this->config['safecopy']) ? 'true' : 'false';
+		if (isset($configuration['safecopy'])) {
+			$configArray[] = '"safecopy":"' . ($configuration['safecopy']) ? 'true' : 'false';
 		}
 
-		if (isset($this->config['doframes'])) {
-			$configArray[] = '"doframes":"' . ($this->config['doframes']) ? 'true' : 'false';
+		if (isset($configuration['doframes'])) {
+			$configArray[] = '"doframes":"' . ($configuration['doframes']) ? 'true' : 'false';
 		}
 
-		if (isset($this->config['storagetype'])) {
-			$configArray[] = '"storagetype":"' . $this->config['storagetype'] . '"';
+		if (isset($configuration['storagetype'])) {
+			$configArray[] = '"storagetype":"' . $configuration['storagetype'] . '"';
 		}
 
 		// Functions:
-		if (isset($this->config['selectorfunction'])) {
-			$configArray[] = '"selectorfunction":' . $functionPrefix . 'selectorfunction';
-		}
-
-		if (isset($this->config['onerrorhandler'])) {
-			$configArray[] = '"onerrorhandler":' . $functionPrefix . 'onerrorhandler';
-		}
-
-		if (isset($this->config['togglebox'])) {
-			$configArray[] = '"togglebox":' . $functionPrefix . 'togglebox';
-		}
-
-		if (isset($this->config['onhyphenationdonecallback'])) {
-			$configArray[] = '"onhyphenationdonecallback":' . $functionPrefix . 'onhyphenationdonecallback';
-		}
-
-		return '{' . implode(',', $configArray) . '}';
-	}
-
-	/**
-	 * Handle function overrides…
-	 *
-	 * @param array $configuration
-	 * @return string
-	 */
-	public function handleFunctionOverrides(array $configuration) {
-		$functions = array();
-		$script = '';
 		if (isset($configuration['selectorfunction'])) {
-			$functions[] = '"selectorfunction":' . $configuration['selectorfunction'];
+			$configArray[] = '"selectorfunction":' . $configuration['selectorfunction'];
 		}
 
 		if (isset($configuration['onerrorhandler'])) {
-			$functions[] = '"onerrorhandler":' . $configuration['onerrorhandler'];
+			$configArray[] = '"onerrorhandler":' . $configuration['onerrorhandler'];
 		}
 
 		if (isset($configuration['togglebox'])) {
-			$functions[] = '"togglebox":' . $configuration['togglebox'];
+			$configArray[] = '"togglebox":' . $configuration['togglebox'];
 		}
 
 		if (isset($configuration['onhyphenationdonecallback'])) {
-			$functions[] = '"onhyphenationdonecallback":' . $configuration['onhyphenationdonecallback'];
+			$configArray[] = '"onhyphenationdonecallback":' . $configuration['onhyphenationdonecallback'];
 		}
 
-		$script .= 'var txHyphenator = { ' . chr(10) . implode(','.chr(10), $functions) . chr(10) . '};';
+		$script .= 'var txHyphenator = { ' . chr(10) . implode(','.chr(10), $configArray) . chr(10) . '};';
 
 		if ($configuration['compressInlineJavaScript']) {
 			$script = JSMin::minify($script);
@@ -201,7 +170,7 @@ class tx_hyphenator {
 	 * @return string
 	 */
 	public function wrapJavaScriptInTags($javaScriptCode) {
-		return '<script type="text/javascript">' . $javaScriptCode . '</script>';
+		return '<script type="text/javascript">/* <![CDATA[ */ ' . $javaScriptCode . ' /* ]]> */</script>';
 	}
 }
 

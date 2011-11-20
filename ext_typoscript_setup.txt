@@ -28,25 +28,28 @@ function(e){ }
 
 		# Do not use a class, but override the selector method to use
 		# every paragraph inside the body.
-		selectorfunction (
-function() {
-	var elements = [],
-		results = [];
-	elements = window.document.getElementsByTagName('p');
-	return elements;
-}
-		)
-# function() {
-# 	var elements = [],
-# 		results = [];
-# 	elements = window.document.getElementsByTagName('p');
-# 	for (var i = 0; i < elements.length; i++) {
-# 		if (elements[i].className.indexOf(dontHyphenateClass) === -1) {
-# 			results.push(elements[i]);
-# 		}
-# 	}
-#   return results;
-# }
+		# selectorfunction (
+		#
+		# /* Select every paragraph inside #main */
+		# function() {
+		#	  var elements = [];
+		#	  elements = window.document.getElementById('main').getElementsByTagName('p');
+		#	  return elements;
+		# }
+		# 
+		# /* Select every paragraph which does not have the donthyphenateclassname specified above */
+		# function() {
+		#	  var elements = [],
+ 		#	  results = [];
+		#	  elements = window.document.getElementsByTagName('p');
+		#	  for(var i = 0; i < elements.length; i++) {
+		#		  if(elements[i].className.indexOf(txHyphenator.donthyphenateclassname) === -1) {
+ 		#			results.push(elements[i]);
+ 		#		  }
+		#	  }
+		#	  return results;
+		# }
+		# )
 
 
 		# Override togglebox code:
@@ -55,10 +58,11 @@ function() {
 		# )
 
 		# Override onhyphenationdone callback:
-		onhyphenationdonecallback (
-function () { console.log('WURM'); }
-		)
+		# onhyphenationdonecallback (
+		# function () { console.log('WURM'); }
+		# )
 	}
 }
 
+# Add classes to every paragraph TYPO3 generates:
 #lib.parseFunc_RTE.nonTypoTagStdWrap.encapsLines.addAttributes.P.class = hyphenate text
